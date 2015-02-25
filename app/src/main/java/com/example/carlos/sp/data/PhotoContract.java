@@ -8,7 +8,7 @@ import android.provider.BaseColumns;
 public class PhotoContract {
 
     public static final class PhotoEntry implements BaseColumns {
-        public static final String TABLE_NAME = "photo";
+        public static final String TABLE_NAME = "photos";
 
         public static final String COLUMN_URL = "url";
 

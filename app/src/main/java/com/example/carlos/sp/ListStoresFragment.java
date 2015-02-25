@@ -1,9 +1,13 @@
 package com.example.carlos.sp;
 
+import android.content.ContentValues;
 import android.content.Intent;
-import android.support.v4.app.Fragment;
+import android.content.res.AssetManager;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,8 +15,16 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
+import com.example.carlos.sp.data.DbHelper;
+import com.example.carlos.sp.data.Store;
+import com.example.carlos.sp.data.Store.StoreEntry;
+
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+
+import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 
 /**
@@ -24,18 +36,15 @@ import java.util.Arrays;
  * create an instance of this fragment.
  */
 public class ListStoresFragment extends Fragment {
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
 
     private ArrayAdapter<String> mStoresAdapter;
-
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
-
     private OnFragmentInteractionListener mListener;
+    private DbHelper db = new DbHelper(getActivity());
+    private SQLiteDatabase SQLite = db.getWritableDatabase();
+    private Cursor cursor;
+    private ArrayList<String> stores;
+    private ListView listview;
+    private Store store;
 
     /**
      * Use this factory method to create a new instance of
@@ -48,10 +57,6 @@ public class ListStoresFragment extends Fragment {
     // TODO: Rename and change types and number of parameters
     public static ListStoresFragment newInstance(String param1, String param2) {
         ListStoresFragment fragment = new ListStoresFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
         return fragment;
     }
 
@@ -62,11 +67,14 @@ public class ListStoresFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
+
     }
+
+    //@Override
+    //public void onActivityCreated(Bundle savedInstanceState) {
+     //
+
+    //}
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -74,26 +82,31 @@ public class ListStoresFragment extends Fragment {
         // Inflate the layout for this fragment
         View rootView = inflater.inflate(R.layout.fragment_list_stores, container, false);
 
-        String[] storesArray = {
-                "Tienda de Lego",
-                "Tienda de Libros",
-                "Tienda de Zapatos",
-                "Tienda de Ropa",
-                "Tienda de Vinos"
-        };
-        ArrayList<String> stores = new ArrayList<String>(
-                Arrays.asList(storesArray)
-        );
+        super.onCreate(savedInstanceState);
+        SQLite = db.getWritableDatabase();
+        cursor = SQLite.rawQuery("SELECT * FROM stores" , null);
+        if(cursor.moveToFirst()){
+            do{
+                stores.add(cursor.getString(cursor.getColumnIndex(StoreEntry.COLUMN_NAME)));
+            }while(cursor.moveToNext());
+        }else{
+            try {
+                readJSONFile();
+            } catch (Exception e) {
 
+            }
+        }
         mStoresAdapter = new ArrayAdapter<String>(
                 getActivity(),
                 R.layout.list_stores,
                 R.id.list_item_store_textview,
                 stores
         );
-
-        ListView listview = (ListView) rootView.findViewById(R.id.listview_store);
         listview.setAdapter(mStoresAdapter);
+
+
+        listview = (ListView) rootView.findViewById(R.id.listview_store);
+
 
         listview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -135,8 +148,54 @@ public class ListStoresFragment extends Fragment {
      * >Communicating with Other Fragments</a> for more information.
      */
     public interface OnFragmentInteractionListener {
-        // TODO: Update argument type and name
         public void onFragmentInteraction(Uri uri);
+    }
+
+
+    public void readJSONFile() throws Exception{
+        JSONParser parser = new JSONParser();
+        AssetManager assetManager = getActivity().getAssets();
+        InputStream input;
+        input = assetManager.open("stores.json");
+        int size = input.available();
+        byte[] buffer = new byte[size];
+        input.read(buffer);
+        input.close();
+        String text = new String(buffer, "UTF-8");
+        JSONArray a = (JSONArray) parser.parse(text);
+        for (Object o : a){
+            JSONObject json_object = (JSONObject) o;
+            String type = (String) json_object.get("type");
+            if(type.equals("store")){
+                String name = (String)json_object.get("name");
+                        store = new Store(
+                            Integer.valueOf(json_object.get("id").toString()),
+                            name,
+                            (String)json_object.get("address"),
+                            (String)json_object.get("phone"),
+                            (String)json_object.get("hoursOfOperaion"),
+                            (String)json_object.get("url"),
+                            (String)json_object.get("email"),
+                            (String)json_object.get("favorites"),
+                            (String)json_object.get("location")
+                        );
+                SQLite.insertWithOnConflict("stores",null, StoreContentValues(store), SQLiteDatabase.CONFLICT_IGNORE);
+                stores.add(name);
+            }
+        }
+    }
+
+    public ContentValues StoreContentValues(Store store){
+        ContentValues content = new ContentValues();
+        content.put(StoreEntry._ID, store.id);
+        content.put(StoreEntry.COLUMN_NAME, store.name);
+        content.put(StoreEntry.COLUMN_ADDRESS, store.address);
+        content.put(StoreEntry.COLUMN_PHONE, store.phone);
+        content.put(StoreEntry.COLUMN_SCHEDULE, store.schedule);
+        content.put(StoreEntry.COLUMN_WEBSITE, store.website);
+        content.put(StoreEntry.COLUMN_EMAIL, store.email);
+        content.put(StoreEntry.COLUMN_LOCATION, store.location);
+        return content;
     }
 
 }

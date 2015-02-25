@@ -8,7 +8,7 @@ import android.provider.BaseColumns;
 public class CommentContract {
 
     public static final class CommentEntry implements BaseColumns {
-        public static final String TABLE_NAME = "comment";
+        public static final String TABLE_NAME = "comments";
 
         public static final String COLUMN_TEXT = "comment_text";
 

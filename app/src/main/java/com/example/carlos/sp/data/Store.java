@@ -5,10 +5,25 @@ import android.provider.BaseColumns;
 /**
  * Created by Carlos on 24/02/15.
  */
-public class StoreContract {
+public class Store {
+
+    public int id;
+    public String name,address,phone,schedule,website,email,favorites,location;
+
+    public Store(int id, String name, String address, String phone, String schedule, String website, String email, String favorites, String location){
+        this.id = id;
+        this.name = name;
+        this.address = address;
+        this.phone = phone;
+        this.schedule = schedule;
+        this.website = website;
+        this.email = email;
+        this.favorites = favorites;
+        this.location = location;
+    }
 
     public static final class StoreEntry implements BaseColumns {
-        public static final String TABLE_NAME = "store";
+        public static final String TABLE_NAME = "stores";
 
         public static final String COLUMN_NAME = "name";
 
