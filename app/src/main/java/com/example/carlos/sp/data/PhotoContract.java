@@ -14,11 +14,9 @@ public class PhotoContract {
 
         public static final String COLUMN_DESCRIPTION = "description";
 
-        public static final String COLUMN_PHONE = "phone";
-
         public static final String COLUMN_FAVORITES_COUNTER = "favorites";
 
-        public static final String COLUMN_LOC_KEY = "store_id";
+        public static final String COLUMN_STORE_KEY = "store_id";
 
 
 
