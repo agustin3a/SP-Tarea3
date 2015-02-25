@@ -23,6 +23,7 @@
         <activity
             android:name=".PhotoStoreActivity"
             android:label="@string/title_activity_photo_store" >
+
         </activity>
     </application>
 
