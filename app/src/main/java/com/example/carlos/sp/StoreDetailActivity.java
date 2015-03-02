@@ -1,6 +1,8 @@
 package com.example.carlos.sp;
 
 import android.content.Intent;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -8,6 +10,7 @@ import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.widget.ShareActionProvider;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -16,11 +19,15 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.example.carlos.sp.data.DbHelper;
+import com.example.carlos.sp.data.Store.StoreEntry;
+
 
 public class StoreDetailActivity extends ActionBarActivity {
 
     Intent mShareIntent;
     ShareActionProvider mShareActionProvider;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -87,74 +94,62 @@ public class StoreDetailActivity extends ActionBarActivity {
      */
     public static class PlaceholderFragment extends Fragment {
 
-        private String[] addressArray = {"14 calle 4-5 Zona 18 Guatemala",
-                "12 calle 4-3 Zona 1 Guatemala",
-                "15 calle 6-5 Zona 16 Guatemala",
-                "9 calle 9-12 Zona 14 Guatemala",
-                "10 calle 34-6 Zona 2 Guatemala"
-        };
-
-        private String[] numberArray = {"59895895", "58392030", "94950334", "56473829", "69605040"};
-
-
-        private String[] scheduleArray = {"Lunes - Viernes : 9:00 - 12:00",
-                "Lunes - Viernes : 8:00 - 10:00",
-                "Lunes - Viernes : 7:00 - 17:00",
-                "Lunes - Viernes : 6:00 - 16:00",
-                "Lunes - Viernes : 5:00 - 18:00",
-        };
-
-        private String[] websiteArray = {"lego.com", "libros.com", "zapatos.com", "ropa.com", "vinos.com"};
-
-        private String[] emailArray = {"lego@gmail.com", "libros@gmail.com", "zapatos@gmail.com", "ropa@gmail.com", "vinos@gmail.com"};
-
-        public int index;
-
         public String store;
 
+        private DbHelper db;
+        private SQLiteDatabase SQLite;
+        private Cursor cursor;
+
+        private String store_address = "";
+        private String store_phone = "";
+        private String store_hoursOfOperation = "";
+        private String store_website = "";
+        private String store_email = "";
+
         public PlaceholderFragment() {
+
         }
 
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
+            db = new DbHelper(getActivity());
             View rootView = inflater.inflate(R.layout.fragment_store_detail, container, false);
 
             Intent intent = getActivity().getIntent();
-            store = intent.getStringExtra(Intent.EXTRA_TEXT);
-            ((TextView) rootView.findViewById(R.id.store_name)).setText(store);
 
-            switch (store) {
-                case "Tienda de Lego":
-                    index = 0;
-                    break;
-                case "Tienda de Libros":
-                    index = 1;
-                    break;
-                case "Tienda de Zapatos":
-                    index = 2;
-                    break;
-                case "Tienda de Ropa":
-                    index = 3;
-                    break;
-                default:
-                    index = 4;
-                    break;
+            store = intent.getStringExtra(Intent.EXTRA_TEXT);
+
+            SQLite = db.getWritableDatabase();
+            cursor = SQLite.rawQuery("SELECT * FROM stores WHERE " + StoreEntry.COLUMN_NAME + "='" + store + "'", null);
+
+            if(cursor.moveToFirst()){
+                store_address = cursor.getString(cursor.getColumnIndex(StoreEntry.COLUMN_ADDRESS));
+                store_phone = cursor.getString(cursor.getColumnIndex(StoreEntry.COLUMN_PHONE));
+                store_hoursOfOperation = cursor.getString(cursor.getColumnIndex(StoreEntry.COLUMN_SCHEDULE));
+                store_website = cursor.getString(cursor.getColumnIndex(StoreEntry.COLUMN_WEBSITE));
+                store_email = cursor.getString(cursor.getColumnIndex(StoreEntry.COLUMN_EMAIL));
+            }else{
+                Log.e("ERROR", "DON'T EXIST THE STORE");
             }
 
 
-            ((TextView) rootView.findViewById(R.id.store_address)).setText(addressArray[index]);
-            ((TextView) rootView.findViewById(R.id.store_number)).setText(numberArray[index]);
-            ((TextView) rootView.findViewById(R.id.store_schedule)).setText(scheduleArray[index]);
-            ((TextView) rootView.findViewById(R.id.store_website)).setText(websiteArray[index]);
-            ((TextView) rootView.findViewById(R.id.store_email)).setText(emailArray[index]);
+            ((TextView) rootView.findViewById(R.id.store_name)).setText(store);
+
+
+
+            ((TextView) rootView.findViewById(R.id.store_address)).setText(store_address);
+            ((TextView) rootView.findViewById(R.id.store_number)).setText(store_phone);
+            ((TextView) rootView.findViewById(R.id.store_schedule)).setText(store_hoursOfOperation);
+            ((TextView) rootView.findViewById(R.id.store_website)).setText(store_website);
+            ((TextView) rootView.findViewById(R.id.store_email)).setText(store_email);
 
 
             ((Button) rootView.findViewById(R.id.call)).setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     Intent callIntent = new Intent(Intent.ACTION_DIAL);
-                    callIntent.setData(Uri.parse("tel:" + numberArray[index]));
+                    callIntent.setData(Uri.parse("tel:" + store_phone));
                     startActivity(callIntent);
                 }
             });
@@ -163,7 +158,7 @@ public class StoreDetailActivity extends ActionBarActivity {
                 @Override
                 public void onClick(View v) {
                     Intent callIntent = new Intent(Intent.ACTION_VIEW);
-                    callIntent.setData(Uri.parse("https://" + websiteArray[index]));
+                    callIntent.setData(Uri.parse("https://" + store_email));
                     startActivity(callIntent);
                 }
             });
@@ -172,7 +167,7 @@ public class StoreDetailActivity extends ActionBarActivity {
                 @Override
                 public void onClick(View v) {
                     Intent callIntent = new Intent(Intent.ACTION_VIEW);
-                    callIntent.setData(Uri.parse("https://www.google.com.gt/maps/place/" + addressArray[index]));
+                    callIntent.setData(Uri.parse("https://www.google.com.gt/maps/place/" + store_address));
                     startActivity(callIntent);
                 }
             });
@@ -182,7 +177,7 @@ public class StoreDetailActivity extends ActionBarActivity {
                 public void onClick(View v) {
                     Intent intent = new Intent(Intent.ACTION_SEND);
                     intent.setType("plain/text");
-                    intent.putExtra(Intent.EXTRA_EMAIL, new String[]{emailArray[index]});
+                    intent.putExtra(Intent.EXTRA_EMAIL, new String[]{store_email});
                     intent.putExtra(Intent.EXTRA_SUBJECT, "subject");
                     intent.putExtra(Intent.EXTRA_TEXT, "mail body");
                     startActivity(Intent.createChooser(intent, ""));

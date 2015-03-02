@@ -4,7 +4,7 @@ import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
-import com.example.carlos.sp.data.CommentContract.CommentEntry;
+import com.example.carlos.sp.data.Comment.CommentEntry;
 import com.example.carlos.sp.data.PhotoContract.PhotoEntry;
 import com.example.carlos.sp.data.Store.StoreEntry;
 
@@ -16,7 +16,7 @@ import com.example.carlos.sp.data.Store.StoreEntry;
 public class DbHelper extends SQLiteOpenHelper {
 
     // If you change the database schema, you must increment the database version.
-    private static final int DATABASE_VERSION = 3;
+    private static final int DATABASE_VERSION = 9;
 
     static final String DATABASE_NAME = "stores.db";
 
@@ -28,7 +28,7 @@ public class DbHelper extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase sqLiteDatabase) {
 
         final String SQL_CREATE_STORE_TABLE = "CREATE TABLE " + StoreEntry.TABLE_NAME + " (" +
-                StoreEntry._ID + "INTEGER PRIMARY KEY," +
+                StoreEntry._ID + " INTEGER PRIMARY KEY," +
                 StoreEntry.COLUMN_NAME + " TEXT UNIQUE NOT NULL, " +
                 StoreEntry.COLUMN_ADDRESS + " TEXT NOT NULL," +
                 StoreEntry.COLUMN_PHONE + " TEXT NOT NULL," +
@@ -40,19 +40,20 @@ public class DbHelper extends SQLiteOpenHelper {
                 ");";
 
         final String SQL_CREATE_PHOTO_TABLE = "CREATE TABLE " + PhotoEntry.TABLE_NAME + " (" +
-                PhotoEntry._ID + "INTEGER PRIMARY KEY AUTOINCREMENT," +
+                PhotoEntry._ID + " INTEGER PRIMARY KEY," +
                 PhotoEntry.COLUMN_URL + " TEXT NOT NULL, " +
                 PhotoEntry.COLUMN_DESCRIPTION + " TEXT NOT NULL," +
                 PhotoEntry.COLUMN_FAVORITES_COUNTER + " INTEGER NOT NULL," +
-                PhotoEntry.COLUMN_STORE_KEY + " INTEGER NOT NULL" +
+                PhotoEntry.COLUMN_STORE_KEY + " INTEGER NOT NULL, " +
                 "FOREIGN KEY (" + PhotoEntry.COLUMN_STORE_KEY+ ") REFERENCES " +
                 StoreEntry.TABLE_NAME + " (" + StoreEntry._ID + ")" +
                 ");";
 
         final String SQL_CREATE_COMMENT_TABLE = "CREATE TABLE " + CommentEntry.TABLE_NAME + " (" +
-                CommentEntry._ID + "INTEGER PRIMARY KEY AUTOINCREMENT," +
+                CommentEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
                 CommentEntry.COLUMN_TEXT + " TEXT NOT NULL, " +
-                "FOREIGN KEY (" + PhotoEntry.COLUMN_STORE_KEY+ ") REFERENCES " +
+                CommentEntry.COLUMN_STORE_KEY + " INTEGER NOT NULL, " +
+                "FOREIGN KEY (" + CommentEntry.COLUMN_STORE_KEY+ ") REFERENCES " +
                 StoreEntry.TABLE_NAME + " (" + StoreEntry._ID + ")" +
                 ");";
 

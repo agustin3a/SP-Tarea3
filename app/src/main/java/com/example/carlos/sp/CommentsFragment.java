@@ -1,53 +1,44 @@
 package com.example.carlos.sp;
 
+import android.content.Intent;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.TextView;
 
+import com.example.carlos.sp.data.Comment.CommentEntry;
+import com.example.carlos.sp.data.DbHelper;
+import com.example.carlos.sp.data.Store;
 
-/**
- * A simple {@link Fragment} subclass.
- * Activities that contain this fragment must implement the
- * {@link CommentsFragment.OnFragmentInteractionListener} interface
- * to handle interaction events.
- * Use the {@link CommentsFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
+import java.util.ArrayList;
+
+
 public class CommentsFragment extends Fragment {
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
 
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
 
+    private DbHelper db;
+    private SQLiteDatabase SQLite;
+    private Cursor cursor;
+
+    private String store;
+    private int storeId;
+    private ArrayList<String> comments;
     private OnFragmentInteractionListener mListener;
+    private ListView listview;
+    private ArrayAdapter<String> mCommentsAdapter;
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment CommentsFragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static CommentsFragment newInstance(String param1, String param2) {
-        CommentsFragment fragment = new CommentsFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
-    }
+
 
     public CommentsFragment() {
         // Required empty public constructor
@@ -56,10 +47,13 @@ public class CommentsFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
+        db = new DbHelper(getActivity());
+        Intent intent = getActivity().getIntent();
+
+        store = intent.getStringExtra(Intent.EXTRA_TEXT);
+
+        SQLite = db.getWritableDatabase();
+
     }
 
     @Override
@@ -67,6 +61,40 @@ public class CommentsFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         final View rootView = inflater.inflate(R.layout.fragment_comments, container, false);
+
+        LinearLayout list = (LinearLayout) rootView.findViewById(R.id.list_comment);
+
+        cursor = SQLite.rawQuery("SELECT * FROM stores WHERE " + Store.StoreEntry.COLUMN_NAME + "='" + store + "'", null);
+
+        if(cursor.moveToFirst()){
+            storeId = cursor.getInt(cursor.getColumnIndex(Store.StoreEntry._ID));
+        }else{
+            Log.e("ERROR", "DON'T EXIST THE STORE");
+        }
+
+        cursor = SQLite.rawQuery("SELECT * FROM " + CommentEntry.TABLE_NAME + " WHERE "
+                + CommentEntry.COLUMN_STORE_KEY + "=" + storeId, null);
+        comments = new ArrayList<String>();
+        if(cursor.moveToFirst()) {
+            do {
+                comments.add(cursor.getString(cursor.getColumnIndex(CommentEntry.COLUMN_TEXT)));
+                TextView vi = (TextView) inflater.inflate(R.layout.list_comments, null);
+                vi.setText(cursor.getString(cursor.getColumnIndex(CommentEntry.COLUMN_TEXT)));
+                list.addView(vi);
+            } while (cursor.moveToNext());
+        }
+
+
+        /*mCommentsAdapter = new ArrayAdapter<String>(
+                getActivity(),
+                R.layout.list_comments,
+                R.id.list_item_comment_textview,
+                comments
+        );
+
+        listview = (ListView) rootView.findViewById(R.id.listview_comments);
+        listview.setAdapter(mCommentsAdapter);
+        */
 
         ((Button) rootView.findViewById(R.id.bComment)).setOnClickListener(new View.OnClickListener() {
             @Override

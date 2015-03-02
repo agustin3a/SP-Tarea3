@@ -7,10 +7,10 @@ import android.provider.BaseColumns;
  */
 public class Store {
 
-    public int id;
-    public String name,address,phone,schedule,website,email,favorites,location;
+    public int id, favorites;
+    public String name,address,phone,schedule,website,email,location;
 
-    public Store(int id, String name, String address, String phone, String schedule, String website, String email, String favorites, String location){
+    public Store(int id, String name, String address, String phone, String schedule, String website, String email, int favorites, String location){
         this.id = id;
         this.name = name;
         this.address = address;
