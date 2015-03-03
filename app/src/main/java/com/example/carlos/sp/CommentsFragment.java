@@ -1,6 +1,8 @@
 package com.example.carlos.sp;
 
+import android.content.ContentValues;
 import android.content.Intent;
+import android.content.res.AssetManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
@@ -17,10 +19,18 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.example.carlos.sp.data.Comment;
 import com.example.carlos.sp.data.Comment.CommentEntry;
 import com.example.carlos.sp.data.DbHelper;
 import com.example.carlos.sp.data.Store;
 
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import com.example.carlos.sp.data.Photo;
+import com.example.carlos.sp.data.Photo.PhotoEntry;
+
+import java.io.InputStream;
 import java.util.ArrayList;
 
 
@@ -37,6 +47,7 @@ public class CommentsFragment extends Fragment {
     private OnFragmentInteractionListener mListener;
     private ListView listview;
     private ArrayAdapter<String> mCommentsAdapter;
+
 
 
 
@@ -136,5 +147,7 @@ public class CommentsFragment extends Fragment {
         // TODO: Update argument type and name
         public void onFragmentInteraction(Uri uri);
     }
+
+
 
 }

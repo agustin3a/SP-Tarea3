@@ -5,7 +5,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
 import com.example.carlos.sp.data.Comment.CommentEntry;
-import com.example.carlos.sp.data.PhotoContract.PhotoEntry;
+import com.example.carlos.sp.data.Photo.PhotoEntry;
 import com.example.carlos.sp.data.Store.StoreEntry;
 
 
@@ -16,7 +16,7 @@ import com.example.carlos.sp.data.Store.StoreEntry;
 public class DbHelper extends SQLiteOpenHelper {
 
     // If you change the database schema, you must increment the database version.
-    private static final int DATABASE_VERSION = 9;
+    private static final int DATABASE_VERSION = 11;
 
     static final String DATABASE_NAME = "stores.db";
 
@@ -43,10 +43,10 @@ public class DbHelper extends SQLiteOpenHelper {
                 PhotoEntry._ID + " INTEGER PRIMARY KEY," +
                 PhotoEntry.COLUMN_URL + " TEXT NOT NULL, " +
                 PhotoEntry.COLUMN_DESCRIPTION + " TEXT NOT NULL," +
-                PhotoEntry.COLUMN_FAVORITES_COUNTER + " INTEGER NOT NULL," +
-                PhotoEntry.COLUMN_STORE_KEY + " INTEGER NOT NULL, " +
-                "FOREIGN KEY (" + PhotoEntry.COLUMN_STORE_KEY+ ") REFERENCES " +
-                StoreEntry.TABLE_NAME + " (" + StoreEntry._ID + ")" +
+                PhotoEntry.COLUMN_FAVORITES_COUNTER + " INTEGER NOT NULL" +
+                //PhotoEntry.COLUMN_STORE_KEY + " INTEGER NOT NULL, " +
+                //"FOREIGN KEY (" + PhotoEntry.COLUMN_STORE_KEY+ ") REFERENCES " +
+                //StoreEntry.TABLE_NAME + " (" + StoreEntry._ID + ")" +
                 ");";
 
         final String SQL_CREATE_COMMENT_TABLE = "CREATE TABLE " + CommentEntry.TABLE_NAME + " (" +

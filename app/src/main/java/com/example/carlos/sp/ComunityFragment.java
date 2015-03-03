@@ -1,50 +1,37 @@
 package com.example.carlos.sp;
 
-import android.net.Uri;
+import android.content.ContentValues;
+import android.content.res.AssetManager;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ListView;
+
+import com.example.carlos.sp.data.DbHelper;
+import com.example.carlos.sp.data.Photo;
+
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+
+import java.io.InputStream;
+import java.util.ArrayList;
 
 
-/**
- * A simple {@link Fragment} subclass.
- * Activities that contain this fragment must implement the
- * {@link ComunityFragment.OnFragmentInteractionListener} interface
- * to handle interaction events.
- * Use the {@link ComunityFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
 public class ComunityFragment extends Fragment {
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
 
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
-
-    private OnFragmentInteractionListener mListener;
-
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment ComunityFragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static ComunityFragment newInstance(String param1, String param2) {
-        ComunityFragment fragment = new ComunityFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
-    }
+    private DbHelper db;
+    private SQLiteDatabase SQLite;
+    private Cursor cursor;
+    private Photo photo;
+    private ArrayList<String> photo_description_list;
+    private ArrayList<String> photo_url_list;
+    private ListView list;
 
     public ComunityFragment() {
         // Required empty public constructor
@@ -53,46 +40,80 @@ public class ComunityFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
+        db = new DbHelper(getActivity());
+
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_comunity, container, false);
-    }
+        View rootView = inflater.inflate(R.layout.fragment_comunity, container, false);
+        SQLite = db.getWritableDatabase();
+        cursor = SQLite.rawQuery("SELECT * FROM " + Photo.PhotoEntry.TABLE_NAME, null);
+        photo_description_list = new ArrayList<String>();
+        photo_url_list = new ArrayList<String>();
+        if(cursor.moveToFirst()){
+            do{
+                photo_description_list.add(cursor.getString(cursor.getColumnIndex(Photo.PhotoEntry.COLUMN_DESCRIPTION)));
+                photo_url_list.add(cursor.getString(cursor.getColumnIndex(Photo.PhotoEntry.COLUMN_URL)));
+            }while(cursor.moveToNext());
+        }else{
+            try {
+                readJSONFile();
+            } catch (Exception e) {
+                Log.e("ERROR", "DON'T READ JSON FILE" + e.getMessage() + e.getCause());
+            }
 
-    // TODO: Rename method, update argument and hook method into UI event
-    public void onButtonPressed(Uri uri) {
-        if (mListener != null) {
-            mListener.onFragmentInteraction(uri);
         }
+
+        CustomList adapter = new CustomList(getActivity(), photo_description_list, photo_url_list);
+        list=(ListView) rootView.findViewById(R.id.community_list);
+        list.setAdapter(adapter);
+
+        return rootView;
     }
 
 
-    @Override
-    public void onDetach() {
-        super.onDetach();
-        mListener = null;
+
+    public void readJSONFile() throws Exception{
+
+        JSONParser parser = new JSONParser();
+        JSONArray comments;
+        AssetManager assetManager = getActivity().getAssets();
+        InputStream input;
+        input = assetManager.open("stores.json");
+        int size = input.available();
+        byte[] buffer = new byte[size];
+        input.read(buffer);
+        input.close();
+        String text = new String(buffer, "UTF-8");
+        JSONArray a = (JSONArray) parser.parse(text);
+        for (Object o : a) {
+            JSONObject json_object = (JSONObject) o;
+            String type = (String) json_object.get("type");
+            if (type.equals("photo")) {
+                String url = (String) json_object.get("url");
+                String description = (String) json_object.get("description");
+                photo = new Photo(
+                        url,
+                        description,
+                        Integer.valueOf(json_object.get("favorites").toString())
+                );
+                SQLite.insert(Photo.PhotoEntry.TABLE_NAME, null,PhotoContentValues(photo));
+                photo_description_list.add(description);
+                photo_url_list.add(url);
+            }
+        }
+
     }
 
-    /**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     * <p/>
-     * See the Android Training lesson <a href=
-     * "http://developer.android.com/training/basics/fragments/communicating.html"
-     * >Communicating with Other Fragments</a> for more information.
-     */
-    public interface OnFragmentInteractionListener {
-        // TODO: Update argument type and name
-        public void onFragmentInteraction(Uri uri);
+    public ContentValues PhotoContentValues(Photo photo) {
+        ContentValues content = new ContentValues();
+        content.put(Photo.PhotoEntry.COLUMN_URL, photo.url);
+        content.put(Photo.PhotoEntry.COLUMN_DESCRIPTION, photo.description);
+        content.put(Photo.PhotoEntry.COLUMN_FAVORITES_COUNTER, photo.favorites);
+        return content;
     }
 
 }

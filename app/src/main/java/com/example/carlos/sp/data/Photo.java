@@ -5,7 +5,17 @@ import android.provider.BaseColumns;
 /**
  * Created by Carlos on 24/02/15.
  */
-public class PhotoContract {
+public class Photo {
+
+    public String url;
+    public String description;
+    public int favorites;
+
+    public Photo(String u, String d, int f) {
+        this.url = u;
+        this.description = d;
+        this.favorites = f;
+    }
 
     public static final class PhotoEntry implements BaseColumns {
         public static final String TABLE_NAME = "photos";
@@ -16,7 +26,7 @@ public class PhotoContract {
 
         public static final String COLUMN_FAVORITES_COUNTER = "favorites";
 
-        public static final String COLUMN_STORE_KEY = "store_id";
+        //public static final String COLUMN_STORE_KEY = "store_id";
 
 
 
