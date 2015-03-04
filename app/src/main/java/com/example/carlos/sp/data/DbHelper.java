@@ -16,7 +16,7 @@ import com.example.carlos.sp.data.Store.StoreEntry;
 public class DbHelper extends SQLiteOpenHelper {
 
     // If you change the database schema, you must increment the database version.
-    private static final int DATABASE_VERSION = 11;
+    private static final int DATABASE_VERSION = 12;
 
     static final String DATABASE_NAME = "stores.db";
 

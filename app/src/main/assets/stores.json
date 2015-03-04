@@ -28,4 +28,9 @@
  "url":"https://www.google.com/images/srpr/logo11w.png",
  "description":"Logo de Google",
  "favorites":4
-}]
+},
+ {"type":"photo",
+  "url":"https://angularjs.org/img/AngularJS-large.png",
+  "description":"Angular",
+  "favorites":4
+ }]
